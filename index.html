@@ -1494,7 +1494,7 @@ const CATS_B=[['Atelier',['bench','metier','coffre','four','enclume','chantier']
 function bcat(b){const c=CATS_B.find(x=>x[1].includes(b.t));return c?c[0]:'Divers'}
 function bsort(l){const o=CATS_B.flatMap(x=>x[1]);return l.slice().sort((a,b)=>(o.indexOf(a.t)+1||99)-(o.indexOf(b.t)+1||99))}
 let CRB=0,CRAFTING=null;const CRAFT_D=TUTO?0.4:10;
-function craftRing(b,k,cb){document.querySelectorAll('.panel').forEach(p=>{if(p.style.display=='flex')p.style.display='none'});UIR=null;CRAFTING={k,cb,t:0,x0:P.x,y0:P.y,hit:0,ic:null,sit:0,done:0,D:TUTO?0.4:sk('f5')?3:sk('f1')?7.5:10};P.mv=false;toast('Fabrication : '+(RES[k]?RES[k][0]:k)+'…')}
+function craftRing(b,k,cb){document.querySelectorAll('.panel').forEach(p=>{if(p.style.display=='flex')p.style.display='none'});UIR=null;CRAFTING={k,cb,t:0,x0:P.x,y0:P.y,hit:0,ic:null,sit:0,done:0,D:TUTO?0.4:(S.inf?0.3:sk('f5')?3:sk('f1')?7.5:10)};P.mv=false;toast('Fabrication : '+(RES[k]?RES[k][0]:k)+'…')}
 function craftTick(dt){const C=CRAFTING;if(!C)return;if(C.done){P.x=C.x0;P.y=C.y0;C.sit-=dt/0.5;if(C.sit<=0)CRAFTING=null;return}if(Math.hypot(P.x-C.x0,P.y-C.y0)>0.25){CRAFTING=null;CRB=0;toast('Fabrication annulée');return}if(C.sit<1){C.sit=Math.min(1,C.sit+dt/0.5);return}C.t+=dt;C.hit-=dt;if(C.hit<=0){C.hit=0.55;P.act={type:'punch',t:0.32,dur:0.32}}if(C.t>=C.D){C.done=1;C.sit=1;C.cb();flash2();fl(P.x,P.y,P.z+1.9,(RES[C.k]?RES[C.k][0]:C.k)+' !','#2f6a2a')}}
 function craftPose(g){const C=CRAFTING,t=T,E2=eqObj(),LK=E2.look||LOOK,SK=SKINS[LK.skin]||SKINS[1];const sv=C.sit<0.5?2*C.sit*C.sit:1-Math.pow(-2*C.sit+2,2)/2,D=17*sv;
  const fx=P.fx||0,fy=P.fy||1,vx=fx-fy,vy=(fx+fy)*0.5,vl=Math.hypot(vx,vy)||1,ux=vx/vl,uy=vy/vl,hx=ux*11,hy=-24+D*0.55+uy*5,back=uy<-0.15;
