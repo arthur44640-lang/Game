@@ -947,6 +947,7 @@ function drawSlash(g,ox,oy){const W=P.wind;if(W){const p=1-W.t/W.dur,px=(P.x-P.y
  for(let n=SLASH.length-1;n>=0;n--){const s=SLASH[n];if(s.t>0.34){SLASH.splice(n,1);continue}const k=s.t/0.34,px=(s.x-s.y)*TW+ox,py=(s.x+s.y)*TH+oy-s.z*LH-16,vx=(s.fx-s.fy)*TW,vy=(s.fx+s.fy)*TH,l=Math.hypot(vx,vy)||1,a0=Math.atan2(vy/l,vx/l),R=s.big?26:18,cx=px+vx/l*10,cy=py+vy/l*5;
   g.save();g.lineCap='round';g.globalAlpha=1-k;for(let q=0;q<3;q++){g.strokeStyle=q==0?s.c:'rgba(255,255,255,0.9)';g.lineWidth=(s.big?7:4)*(1-q*0.35)*(1-k*0.5);g.beginPath();g.ellipse(cx,cy,R+q*2,R*0.55+q,0,a0-1.3+k*0.6,a0+1.3-k*0.2);g.stroke()}g.restore()}}
 function attackBtn(){if(CRAFTING||P.wind||INS||P.boat||build||dead||CUT)return;if(shootArrow())return;startWind(handWpn(),meleeTarget())}
+function faceLock(dt){if(INS||P.boat||build||CRAFTING||dead)return;let best=null,bd=4.5;for(const e of E){if(!SPEC[e.k].mon)continue;const d=Math.hypot(e.x-P.x,e.y-P.y);if(d<bd){bd=d;best=e}}if(!best)return;const d=Math.max(0.01,bd);P.fx=(best.x-P.x)/d;P.fy=(best.y-P.y)/d;const tt=Math.atan2(P.fx-P.fy,(P.fx+P.fy)*0.5);let df=tt-P.th;while(df>Math.PI)df-=Math.PI*2;while(df<-Math.PI)df+=Math.PI*2;P.th+=df*Math.min(1,dt*16)}
 function slashTick(dt){for(const s of SLASH)s.t+=dt}
 function v2Init(){FOODV.oeuf=2;for(const A of [S.slots||[],S.bag||[],S.hands||[]])for(const it of A){if(it&&it.r=='epee2')it.r='epee1';if(it&&DURMAX[it.r]&&it.dur===undefined)it.dur=DURMAX[it.r]}for(const b of (S.built||[])){for(const it of (b.slots||[]))if(it&&it.r=='epee2')it.r='epee1';for(const e of (b.inside||[]))for(const it of (e.slots||[]))if(it&&it.r=='epee2')it.r='epee1'}if(TUTO)return;S.stats=S.stats||{};S.made=S.made||{};if(S.skv!==2){S.sk={};S.skv=2}
  for(const q of (S.grow||[]))if(inB(q.i,q.j)&&!(OB[q.i][q.j]&&OB[q.i][q.j].ref))OB[q.i][q.j]=mkGrow(q);
@@ -969,6 +970,7 @@ function update(dt){craftTick(dt);windTick(dt);slashTick(dt);timeTick(dt);nightT
  const m=Math.min(1,Math.hypot(jx,jy));
  if(m>0.12){const nj=Math.hypot(jx,jy),spx=(S.tools.bottes?73*1.2:73)*(sk('e1')?1.08:1)*(P.boat?1.35:1)*m*dt,dX=jx/nj*spx,dY=jy/nj*spx;let wx=(jx/TW+jy/TH)/2,wy=(jy/TH-jx/TW)/2;const l=Math.hypot(wx,wy);wx/=l;wy/=l;P.fx=wx;P.fy=wy;const mx=(dX/TW+dY/TH)/2,my=(dY/TH-dX/TW)/2;
   moveP(mx,my);P.walk+=dt*10*m;P.mv=true;P.ph+=dt*11*m;const tt=Math.atan2(wx-wy,(wx+wy)*0.5);let df=tt-P.th;while(df>Math.PI)df-=Math.PI*2;while(df<-Math.PI)df+=Math.PI*2;P.th+=df*Math.min(1,dt*10)}else{P.walk=0;P.mv=false;P.ph+=dt*2}
+ faceLock(dt);
  if(!INS){const gz=hAt(Math.floor(P.x),Math.floor(P.y));P.z+=(gz-P.z)*Math.min(1,dt*14)}
  P.cd-=dt;P.swing-=dt;P.hurt-=dt;if(P.act)P.act.t-=dt;
  if(P.kbt>0){const f=P.kbt/0.22;moveP(P.kbx*f*dt*1.8,P.kby*f*dt*1.8);P.kbt-=dt}
