@@ -39,6 +39,7 @@ html,body{height:100%;overflow:hidden;background:#86c6d9;font-family:system-ui,-
 .rb svg{width:22px;height:22px}
 #bPause{position:fixed;top:calc(env(safe-area-inset-top) + 8px);right:10px;width:44px;height:44px;border-radius:50%;border:none;background:rgba(255,255,255,.92);box-shadow:0 3px 0 rgba(0,0,0,.13);color:#5a4a2a;display:flex;align-items:center;justify-content:center;z-index:3}
 #bPause svg{width:20px;height:20px}
+.rt{opacity:.5}.rt.on{opacity:1;outline:2px solid #3fae4a}
 .pausebox{background:#fbf6e9;border-radius:22px;padding:22px 26px;text-align:center;min-width:220px}
 .pt{font-size:22px;font-weight:800;color:#4a3a1a;margin-bottom:16px}
 .btn{border:none;border-radius:999px;font-weight:700;font-family:inherit;box-shadow:0 3px 0 rgba(0,0,0,.13)}
@@ -244,7 +245,8 @@ body.xpreveal #xpb,body.xpreveal #bSkill{animation:xpop .6s cubic-bezier(.2,1.6,
 <div class="side l"><button class="rb" id="bSkill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg>Compétences</button><button class="rb" id="bBag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6V5a3 3 0 0 1 6 0v1"/><rect x="5" y="6" width="14" height="15" rx="4"/><path d="M9 21v-4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4"/><path d="M8 11h8"/></svg>Inventaire</button></div>
 <div class="side r"><button class="rb" id="bBuild"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V10l7-5 7 5v11"/><path d="M10 21v-6h4v6"/></svg>Bâtir</button></div>
 <div id="clock"><canvas width="88" height="88"></canvas><b>Jour 1</b></div><button id="bPause" aria-label="Pause"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6v12M15 6v12"/></svg></button>
-<div class="panel" id="pPause" style="align-items:center"><div class="pausebox"><div class="pt" id="ptitle">Pause</div><button class="btn big2" id="bResume">Reprendre</button><button class="btn pm" id="bBook">Carnet</button><button class="btn pm" id="bStats">Statistiques</button></div></div>
+<div class="panel" id="pPause" style="align-items:center"><div class="pausebox"><div class="pt" id="ptitle">Pause</div><button class="btn big2" id="bResume">Reprendre</button><button class="btn pm" id="bBook">Carnet</button><button class="btn pm" id="bStats">Statistiques</button><button class="btn pm" id="bReport">Signaler / Idée</button></div></div>
+<div class="panel" id="pReport" style="align-items:center;z-index:30"><div class="pausebox" style="max-width:340px;width:86vw"><div class="pt">Signaler / Idée</div><div id="rtype" style="display:flex;gap:6px;justify-content:center;margin:8px 0"><button class="btn pm rt on" data-t="Bug">🐞 Bug</button><button class="btn pm rt" data-t="Idée">💡 Idée</button><button class="btn pm rt" data-t="Autre">💬 Autre</button></div><textarea id="rTxt" placeholder="Explique ce qui se passe ou ce que tu aimerais…" style="width:100%;height:120px;border-radius:12px;border:1px solid #d8ccb0;padding:10px;font:14px system-ui,sans-serif;box-sizing:border-box;resize:none;background:#fff"></textarea><p id="rInfo" style="font-size:12px;color:#8a7a5a;margin:6px 0 0">Ton message sera envoyé au créateur du jeu (Messages, WhatsApp…).</p><div style="display:flex;gap:8px;margin-top:10px;justify-content:center"><button class="btn pm" id="rSend">Envoyer</button><button class="btn pm" id="rClose">Fermer</button></div></div></div>
 <button id="cancel">Annuler</button>
 <button id="bEdit">Modifier</button>
 <button id="bDestroy">Détruire</button>
@@ -1415,6 +1417,15 @@ requestAnimationFrame(loop);
 window.__BODY0=document.body.innerHTML;
 window.__SOFT=function(){document.querySelectorAll('html>*:not(head):not(body)').forEach(n=>n.remove());document.body.className='ontitle';document.body.removeAttribute('style');document.body.innerHTML=window.__BODY0;window.__GAME()};
 window.__GAME();
+(function(){const $=id=>document.getElementById(id);let typ='Bug';
+document.addEventListener('click',e=>{const t=e.target;if(!t)return;
+ if(t.id=='bReport'){$('pReport').style.display='flex';$('rInfo').textContent='Ton message sera envoyé au créateur du jeu (Messages, WhatsApp…).';return}
+ if(t.id=='rClose'){$('pReport').style.display='none';return}
+ if(t.classList&&t.classList.contains('rt')){typ=t.dataset.t;document.querySelectorAll('.rt').forEach(b=>b.classList.toggle('on',b===t));return}
+ if(t.id=='rSend'){const m=$('rTxt').value.trim();if(!m){$('rInfo').textContent='Écris d’abord ton message.';return}let ctx='';try{const S=JSON.parse(localStorage.getItem('ilePrintaniere_v3')||'{}');ctx='\n\n— Infos : objectif '+((S.obj||0)+1)+', niveau '+(S.lvl||1)+', '+(navigator.userAgent.match(/iPhone|iPad|Android|Mac|Windows/)||['?'])[0]}catch(er){}const txt='[Sujet 0847 · '+typ+']\n'+m+ctx;
+  const done=()=>{$('rTxt').value='';$('rInfo').textContent='Merci ! 👍';setTimeout(()=>$('pReport').style.display='none',900)};
+  if(navigator.share){navigator.share({text:txt}).then(done).catch(()=>{})}else{const fb=()=>{$('rInfo').textContent='Message copié : colle-le dans un SMS au créateur.'};if(navigator.clipboard)navigator.clipboard.writeText(txt).then(fb,()=>{$('rTxt').value=txt;$('rTxt').select();$('rInfo').textContent='Copie ce texte et envoie-le au créateur.'});else{$('rTxt').value=txt;$('rTxt').select();$('rInfo').textContent='Copie ce texte et envoie-le au créateur.'}}}
+},true)})();
 </script>
 </body>
 </html>
