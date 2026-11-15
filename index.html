@@ -247,11 +247,11 @@ body.xpreveal #xpb,body.xpreveal #bSkill{animation:xpop .6s cubic-bezier(.2,1.6,
 </style>
 <style>
 @media (orientation:landscape) and (max-height:540px){
-.pad{left:calc(env(safe-area-inset-left) + 30px);margin-left:0;bottom:calc(env(safe-area-inset-bottom) + 16px)}
-.hint{left:calc(env(safe-area-inset-left) + 16px);transform:none;bottom:calc(env(safe-area-inset-bottom) + 146px)}
+.pad{left:auto;right:calc(env(safe-area-inset-right) + 30px);margin-left:0;bottom:calc(env(safe-area-inset-bottom) + 16px)}
+.hint{left:auto;right:calc(env(safe-area-inset-right) + 16px);transform:none;bottom:calc(env(safe-area-inset-bottom) + 146px)}
 .side{bottom:calc(env(safe-area-inset-bottom) + 14px);gap:8px}
-.side.r{right:calc(env(safe-area-inset-right) + 14px);left:auto}
-.side.l{left:auto;right:calc(env(safe-area-inset-right) + 76px)}
+.side.l{right:auto;left:calc(env(safe-area-inset-left) + 14px)}
+.side.r{right:auto;left:calc(env(safe-area-inset-left) + 76px)}
 .side.l,.side.r{flex-direction:column;justify-content:flex-end}
 .obj{max-width:250px;font-size:12px;padding:5px 9px}
 #tuto{max-width:300px}
