@@ -410,12 +410,9 @@ DROPS.mouton={viande:1,laine:[1,2]};DROPS.vache={viande:[1,2],cuir:1};DROPS.cerf
 const MDROP={araignee:[['fil',1,1,0.7]],golem:[['pierre',2,3,1],['ferB',1,1,0.4],['orB',1,1,0.06]],cristal:[['ferB',1,2,0.7],['orB',1,1,0.35],['diamB',1,1,0.12]]};
 CRAFT.push(
  {k:'cisailles',n:'Cisailles',d:'En main : tonds un mouton sans le tuer. 30 utilisations',c:{silex:2,branche:1},dur:30},
- {k:'piocheF',n:'Pioche en fer',d:'Puissance 2,5 · 500 coups. Indispensable pour l’or et le diamant',c:{fer:3,branche:2},dur:500},
+ {k:'piocheF',n:'Pioche en fer',d:'Puissance 2,5 · 500 coups. Indispensable pour l’or et le diamant. Améliorable à l’enclume',c:{fer:3,branche:2},dur:500},
  {k:'hacheF',n:'Hache en fer',d:'Puissance 2,5 · 500 coups',c:{fer:3,branche:2},dur:500},
- {k:'piocheD',n:'Pioche de diamant',d:'Puissance 5 · 2500 coups',c:{diamant:2,fer:2,branche:2},dur:2500,req:'piocheF'},
  {k:'epeeF',n:'Épée en fer',d:'Dégâts 2,5 · 500 coups',c:{fer:4,cuir:1,branche:1},req:'epee1',dur:500},
- {k:'epeeO',n:'Lame dorée',d:'Dégâts 3 · 700 coups · +25 % d’XP quand tu la tiens',c:{or:4,fer:1,cuir:1},req:'epeeF',dur:700},
- {k:'epeeD',n:'Épée de diamant',d:'Dégâts 5 · 2500 coups. La lame ultime',c:{diamant:3,or:2,cuir:1},req:'epeeO',dur:2500},
  {k:'plastron',n:'Plastron en fer',d:'+2 points d’armure',c:{fer:5,cuir:2},req:'tunique',cl:1},
  {k:'casque',n:'Casque en fer',d:'+1,5 point d’armure',c:{fer:3,cuir:1},req:'chapeau',cl:1});
 BUILD.push(
@@ -819,9 +816,14 @@ function meleeAtk(e,wk){let a=wk?ATK[wk]:0.5;if(sk('b1'))a+=0.5;if(sk('xbf')&&(w
  if(SPEC[e.k].mon&&sk('xeb')){const full=SPEC[e.k].hp||(FICHE[e.k]?FICHE[e.k].pv:1);if(e.hp>=full){m*=3;fl(e.x,e.y,e.z+1.3,'Embuscade !','#7a5cc8')}}
  if(sk('b3')&&Math.random()<0.15){m*=2;fl(e.x,e.y,e.z+1.6,'Critique !','#d9534a')}return a*m}
 /* --- enclume --- */
-function openAnvil(){const R=()=>{CONT={};ACC={};UIR=R;LIVE=null;const el=document.getElementById('sUI');el.innerHTML=head('Enclume','pUI')+'<p class="sub">1 lingot de fer répare la moitié de l’usure d’un objet. Tu as '+invCount('fer')+' lingot'+(invCount('fer')>1?'s':'')+'.</p>';
+const UPG={epee1:['epeeF',{fer:3}],pioche:['piocheF',{fer:3}],hache:['hacheF',{fer:3}],epeeF:['epeeO',{or:3}],epeeO:['epeeD',{diamant:3}],piocheF:['piocheD',{diamant:3}]};
+function openAnvil(){const R=()=>{CONT={};ACC={};UIR=R;LIVE=null;const el=document.getElementById('sUI');el.innerHTML=head('Enclume','pUI');
+ const U=[];for(const A of [S.hands||[],S.slots||[],S.bag||[]])for(const it of A)if(it&&UPG[it.r])U.push(it);
+ {const h=document.createElement('h3');h.textContent='Améliorer';el.appendChild(h);if(!U.length){const d=document.createElement('div');d.className='item';d.innerHTML='<div class="t">Rien à améliorer<small>Épée en bois → fer (3 fer) → dorée (3 or) → diamant (3 diamants). Pioche et hache : pierre → fer (3 fer). Pioche en fer → diamant (3 diamants).</small></div>';el.appendChild(d)}
+  for(const it of U){const [nk,cost]=UPG[it.r],row=document.createElement('div');row.className='item';const ic=document.createElement('canvas');ic.width=104;ic.height=104;const g=ic.getContext('2d');g.scale(2,2);drawTool(g,nk);row.appendChild(ic);const t=document.createElement('div');t.className='t';t.innerHTML=RES[it.r][0]+' → '+RES[nk][0]+'<small>Neuve après amélioration</small>'+costHTML(cost);paintIcons(t);row.appendChild(t);const b=document.createElement('button');b.textContent='Améliorer';b.disabled=!afford(cost);b.onclick=()=>{if(!afford(cost))return;pay(cost);it.r=nk;it.dur=DURMAX[nk];S.made[nk]=1;S.stats.upg=(S.stats.upg||0)+1;flash2();toast('Nouvelle arme : '+RES[nk][0]+' !');save();checkObj();R()};row.appendChild(b);el.appendChild(row)}}
+ {const h=document.createElement('h3');h.textContent='Réparer · tu as '+invCount('fer')+' fer';el.appendChild(h)}
  const L=[];for(const A of [S.hands||[],S.slots||[],S.bag||[]])for(const it of A)if(it&&DURMAX[it.r]&&it.dur!==undefined&&it.dur<DURMAX[it.r])L.push(it);
- if(!L.length)el.innerHTML+='<div class="item"><div class="t">Rien à réparer<small>Tes armes et outils sont en parfait état.</small></div></div>';
+ if(!L.length){const d=document.createElement('div');d.className='item';d.innerHTML='<div class="t">Rien à réparer<small>1 lingot de fer répare la moitié de l’usure d’un objet.</small></div>';el.appendChild(d)}
  for(const it of L){const mx=DURMAX[it.r],row=document.createElement('div');row.className='item';const ic=document.createElement('canvas');ic.width=104;ic.height=104;const g=ic.getContext('2d');g.scale(2,2);drawTool(g,it.r);row.appendChild(ic);const t=document.createElement('div');t.className='t';const f=it.dur/mx;t.innerHTML=RES[it.r][0]+'<small>'+it.dur+' / '+mx+' coups</small><span class="durb"><span style="width:'+(f*100)+'%;background:'+(f>0.5?'#8fc05a':f>0.25?'#f0b44c':'#e0554a')+'"></span></span>';row.appendChild(t);
   const b=document.createElement('button');b.textContent='Réparer · 1 fer';b.disabled=invCount('fer')<1&&!(S.inf&&!TUTO);b.onclick=()=>{if(invCount('fer')<1&&!(S.inf&&!TUTO))return;if(!(S.inf&&!TUTO))invRemove('fer',1);it.dur=Math.min(mx,it.dur+Math.ceil(mx/2));S.stats.repairs=(S.stats.repairs||0)+1;toast(RES[it.r][0]+' réparé(e) !');save();R()};row.appendChild(b);el.appendChild(row)}
  wireClose(el)};R();open('pUI')}
@@ -921,7 +923,7 @@ const TALKS={
  ingot:['Premier lingot. Te voilà à l’âge du fer.','À l’[Établi] : pioche, hache, épée, armure.','Le fer sert aussi au [Chantier naval], à poser au bord de l’eau.'],
  yard:['Chantier naval enregistré.','[Quatre étapes] : quille, coque, mât et voile, calfatage.','Appuie sur Action devant le chantier pour livrer les matériaux de chaque étape.'],
  boat:['Navire à flot. Je n’y croyais pas.','Appuie sur [Action] près du bateau pour embarquer.','En mer, appuie sur [Action] près d’une rive pour débarquer.','Mes cartes signalent des [îlots] dans les coins de la zone.'],
- enclume:['Une enclume. Enfin, de l’entretien.','Tes armes et tes outils s’usent à chaque coup. Quand ils cassent, ils disparaissent.','Appuie sur [Action] devant l’enclume : [1 lingot de fer] répare la moitié de l’usure.'],
+ enclume:['Une enclume. Enfin, de l’entretien.','Tes armes et tes outils s’usent à chaque coup. Quand ils cassent, ils disparaissent.','Appuie sur [Action] devant l’enclume : [1 lingot de fer] répare la moitié de l’usure.','Elle sert aussi à [améliorer] : épée en fer + [3 or] = lame dorée. Lame dorée + [3 diamants] = épée de diamant.'],
  maj:['Mise à jour du programme détectée. Ils ont tout chamboulé pendant que tu dormais.','Arbres et rochers ne repoussent plus : il faut les [replanter]. Branches et cailloux tombent quand tu les casses.','Une [grotte] s’est ouverte sur l’île : fer, or, diamant… et des choses qui mordent.','Regarde dans [Bâtir] : enclos, four, chantier naval. Oui, un [bateau].','Ton arbre de compétences a été refait en [cinq classes]. Tes points t’ont été rendus.'],
  tresor:['Un coffre, ici ? Quelqu’un est passé avant toi, sujet 0847.','Intéressant. Je n’ai aucune donnée là-dessus.']};
 function canTalk(){return !!(BOT&&BOT.awake&&!INS&&!CUT&&!uiOpen()&&!cardOpen&&!dead&&!P.boat&&!build&&!CRAFTING)}
