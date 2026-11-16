@@ -352,7 +352,7 @@ const FICHE={
  golem:{pv:30,biome:'Sous l’île',joke:'Il a un cœur de pierre. Le reste aussi, d’ailleurs.',comp:'Avance lentement · Lève les bras puis frappe le sol : recule à ce moment-là · Ne recule jamais',drop:'Pierre · Minerai de fer (parfois) · Minerai d’or (rare)',hab:'Garde les filons au fond de la grotte.'},
  cristal:{pv:46,biome:'Sous l’île',joke:'Les diamants sont éternels. Lui aussi, si tu ne fais rien.',comp:'Comme le golem, en plus rapide et bien plus dangereux · Brille dans le noir',drop:'Minerai de fer · Minerai d’or (parfois) · Diamant brut (rare)',hab:'Très rare. Rôde dans les zones les plus profondes.'},
  chauve:{pv:4,biome:'Île Printanière · la nuit',joke:'Elle dort la tête en bas. Ça explique pas mal de choses.',comp:'Vole en zigzag puis pique sur toi · Repart aussitôt après avoir mordu',drop:'Cuir (parfois)',hab:'Sort à la tombée de la nuit et disparaît au lever du jour.'},
- ombre:{pv:8,biome:'Île Printanière · la nuit',joke:'Il a peur de la lumière. Toi, tu as peur de lui. Chacun son truc.',comp:'Te suit dans le noir en traversant les arbres · N’ose pas approcher d’un feu allumé · Ralenti par une torche',drop:'Silex ×1 à 2',hab:'Rôde la nuit et s’évapore dès l’aube.'},
+ ombre:{pv:8,biome:'Île Printanière · la nuit',joke:'Il a peur de la lumière. Toi, tu as peur de lui. Chacun son truc.',comp:'Te suit dans le noir en traversant les arbres · Fuit les flammes : feu de camp et torche · La lumière du drone ne lui fait rien',drop:'Silex ×1 à 2',hab:'Rôde la nuit et s’évapore dès l’aube.'},
  vache:{pv:5,biome:'Île Printanière',joke:'Elle n’a jamais couru de sa vie. Sauf la fois où tu l’as tapée.',comp:'Rumine en troupeau · Calme, elle ne s’enfuit que si on la frappe',drop:'Viande crue ×2 à 3 · Cuir',hab:'Avance tranquillement en petit troupeau dans les prairies.'},
  poulet:{pv:1,biome:'Île Printanière',joke:'Elle traverse la route. Personne ne sait pourquoi.',comp:'Picore sans arrêt · Détale en battant des ailes si on la frappe',drop:'Viande crue · Plumes ×1 à 2',hab:'Picore en petite bande près des herbes hautes.'},
  mouton:{pv:3,biome:'Île Printanière',joke:'Il compte les humains pour s’endormir. Il n’en a jamais dépassé un.',comp:'Broute en troupeau · Calme, il ne s’éloigne que si on le frappe',drop:'Viande crue · Laine ×2 à 3',hab:'Se déplace lentement en petits groupes dans les prairies.'},
@@ -379,7 +379,7 @@ const BUILD=[
 const CRAFT=[
  {k:'pioche',n:'Pioche',d:'Casse les rochers. S’use après 20 coups',c:{branche:2,caillou:3},free:1,dur:20},
  {k:'hache',n:'Hache',d:'Coupe les arbres. S’use après 20 coups',c:{branche:2,caillou:3},free:1,dur:20},
- {k:'torche',n:'Torches ×5',d:'Éclairent autour de toi la nuit. Se tiennent dans une main',c:{branche:1,silex:1},free:1,q:5},
+ {k:'torche',n:'Torches ×5',d:'Éclairent et éloignent les rôdeurs. 5 min chacune, en main la nuit',c:{branche:1,silex:1},free:1,q:5},
  {k:'rudi',n:'Épée rudimentaire',d:'Dégâts 1 (poings : 0,5) · 20 coups',c:{branche:2,caillou:2},free:1,dur:20},
  {k:'tunique',n:'Veste',d:'+½ point d’armure',c:{laine:4},cl:1},
  {k:'short',n:'Short',d:'+½ point d’armure',c:{laine:2,cuir:1},cl:1},
@@ -714,11 +714,12 @@ function updE(e,dt){const sp=SPEC[e.k],dx=P.x-e.x,dy=P.y-e.y,d=Math.hypot(dx,dy)
   else if(e.state=='slam'){e.moving=false;if(e.st<=0)e.state='idle'}
   else if(d<7.5){if(d<1.2&&e.cd<=0){e.state='wind';e.st=0.75;e.cd=2.4}else if(d>0.85){const f=bestDir(e,dx,dy);if(f)moveE(e,f[0],f[1],e.k=='cristal'?1.15:0.9,dt);else e.moving=false}else{e.moving=false;faceE(e,dx,dy,dt,4)}}
   else{const w=wander(3,3,6);if(w)moveE(e,w[0],w[1],0.5,dt);else e.moving=false}break}
- case 'ombre':{e.ph+=dt;let fx=0,fy=0,lit=false;for(const b of S.built)if(b.t=='fire'){const o=OB[b.i]&&OB[b.i][b.j];if(o&&o.fuel>0){const qx=e.x-(b.i+.5),qy=e.y-(b.j+.5),q=Math.hypot(qx,qy);if(q<3.4){lit=true;fx+=qx/(q||1);fy+=qy/(q||1)}}}
-  if(lit){const f=bestDir(e,fx,fy);if(f)moveE(e,f[0],f[1],2,dt);break}
-  if(d<10){let near=false;for(const b of S.built)if(b.t=='fire'){const o=OB[b.i]&&OB[b.i][b.j];if(o&&o.fuel>0&&Math.hypot(P.x-(b.i+.5),P.y-(b.j+.5))<3&&d<4.2)near=true}
-   if(near){e.moving=false;faceE(e,dx,dy,dt);break}
-   if(d>0.55){const f=bestDir(e,dx,dy);if(f)moveE(e,f[0],f[1],handHas('torche')?1.05:1.75,dt)}else e.moving=false;
+ case 'ombre':{e.ph+=dt;const LS=lightSrc();let fx=0,fy=0,inL=false;for(const [x,y,r] of LS){const qx=e.x-x,qy=e.y-y,q=Math.hypot(qx,qy);if(q<r){inL=true;const w=(r-q)/r+0.3;fx+=qx/(q||1)*w;fy+=qy/(q||1)*w}}
+  if(inL){const f=bestDir(e,fx,fy);if(f)moveE(e,f[0],f[1],2.4,dt);e.cd=Math.max(e.cd,0.6);break}
+  if(d<10){let safe=false;for(const [x,y,r] of LS)if(Math.hypot(P.x-x,P.y-y)<r+0.6)safe=true;
+   if(safe){const tx=e.x+dx/d*0.7,ty=e.y+dy/d*0.7;let l2=false;for(const [x,y,r] of LS)if(Math.hypot(tx-x,ty-y)<r+0.2)l2=true;
+    if(!l2){const f=bestDir(e,dx,dy);if(f)moveE(e,f[0],f[1],1.1,dt);else e.moving=false}else{const s=Math.sin(e.ph*0.6+e.x*3)>0?1:-1,f=bestDir(e,-dy/d*s,dx/d*s);if(f)moveE(e,f[0],f[1],0.35,dt);else e.moving=false;faceE(e,dx,dy,dt)}break}
+   if(d>0.55){const f=bestDir(e,dx,dy);if(f)moveE(e,f[0],f[1],1.75,dt)}else e.moving=false;
    if(d<0.7&&e.cd<=0){hitP(sp.dmg*2,dx/d,dy/d);e.cd=1.7}}
   else{const w=wander(4,2,4);if(w)moveE(e,w[0],w[1],0.8,dt);else e.moving=false}break}
  case 'chauve':{e.ph+=dt;e.hz=13+Math.sin(e.ph*3)*3;if(e.state=='away'){if(e.st<=0)e.state='idle';moveE(e,e.hdx,e.hdy,2.8,dt);break}
@@ -948,7 +949,7 @@ const TALKS={
  birth:['Naissance enregistrée. Félicitations, sujet.','Le petit grandit tout seul. Tant qu’il est jeune, il ne donne [rien].','Patience : un adulte vaut bien plus.'],
  cis:['Des cisailles. Un outil civilisé.','Tiens-les [en main] et appuie sur Action près d’un [mouton adulte].','Tu récupères sa laine [sans le tuer]. Elle repousse en quelques minutes.'],
  oeuf:['Tes poules apprivoisées pondent.','Un œuf, ça se mange. Touche-le dans ton inventaire.'],
- nuit:['Signatures hostiles nocturnes.','Les [rôdeurs d’ombre] craignent le feu : reste près d’un [feu de camp] allumé.','Une [torche] en main les ralentit. Ils disparaissent à l’aube.'],
+ nuit:['Signatures hostiles nocturnes.','Les [rôdeurs d’ombre] craignent le feu : reste près d’un [feu de camp] allumé.','Une [torche] en main les tient à distance, 5 minutes chacune. Ma lumière à moi ne les effraie pas. Ils disparaissent à l’aube.'],
  grotte:['Cavité détectée. Mes capteurs indiquent du [métal] en dessous.','Il fait noir là-dedans : prends des [torches].','Appuie sur [Action] devant l’entrée pour descendre.'],
  cave:['Nous sommes sous l’île. Reste près de ma lampe.','Filons [orangés] : fer. Filons [jaunes] : or. Filons [bleus] : diamant, rarissime.','Ta pioche de base suffit pour le fer. Pour l’or et le diamant, il faut une [pioche en fer].','Les [golems] lèvent les bras avant de frapper : [recule] à ce moment-là.','Une échelle remonte à la surface. Il y en a une [deuxième], ailleurs sous l’île.'],
  ore:['Minerai brut. Inutilisable tel quel.','Construis un [Four] : Bâtir → Atelier.','Minerai en haut, [bois] en bas. Il en sortira un [lingot].'],
@@ -1012,11 +1013,16 @@ function eqSlot(d,sl,k){d.dataset.c='eq_'+sl;d.dataset.i=0;CONT['eq_'+sl]=[k?{r:
  d.onpointercancel=()=>{if(dg&&dg.gh)dg.gh.remove();dg=null;UIR&&UIR()}}
 function oneOutfit(){for(const [sl] of ASLOT){const w=wornIn(sl);if(w.length>1)for(const k of w.slice(0,-1))giveItem(takeOff(k))}}
 
+const TORCHL=300;
+function torchLit(){return handHas('torche')&&!INS&&(CAVE||darkAt(S.time||0)>0.05)}
+function lightSrc(){const L=[];for(const b of S.built)if(b.t=='fire'){const o=OB[b.i]&&OB[b.i][b.j];if(o&&o.fuel>0)L.push([b.i+.5,b.j+.5,4])}if(handHas('torche')&&!INS)L.push([P.x,P.y,3.2]);return L}
+function torchTick(dt){if(!torchLit())return;const q=S.hands.findIndex(x=>x&&x.r=='torche');if(q<0)return;const h=S.hands[q];if(h.dur==null)h.dur=TORCHL;h.dur-=dt;if(h.dur<=0){h.n--;if(h.n<=0){S.hands[q]=null;toast('Ta dernière torche s’est éteinte')}else{h.dur=TORCHL;fl(P.x,P.y,P.z+1.6,'Torche consumée · encore '+h.n,'#e0902a')}renderHud();save();UIR&&UIR()}}
+
 let nightT=4,duskSaid=false;
 function nightTick(dt){if(TUTO||INS||CAVE)return;const t=S.time||0,night=t>=425&&t<690;
  if(night){if(!duskSaid){duskSaid=true;toast('La nuit tombe… reste près d’un feu')}nightT-=dt;if(nightT<=0){nightT=7+Math.random()*5;const cnt=E.filter(e=>SPEC[e.k].night).length,cap=Math.min(7,2+(S.day||1));if(cnt<cap){const k=Math.random()<0.5?'chauve':'ombre';for(let n=0;n<30;n++){const c=pickTile(SPEC[k],[P.x,P.y,11]);if(!c)break;const d=Math.hypot(c[0]-P.x,c[1]-P.y);if(d<7||d>12||nearBuilt(Math.floor(c[0]),Math.floor(c[1]),3))continue;const e=spawnE(k,c);if(e&&k=='chauve')e.hz=13;break}}}}
  else{duskSaid=false;nightT=4;if(t<420)for(let n=E.length-1;n>=0;n--){const e=E[n];if(!SPEC[e.k].night)continue;for(let k=0;k<6;k++)PUFF.push({x:e.x,y:e.y,z:e.z,hz:6+Math.random()*14,r:3+Math.random()*3,t:0,life:0.7+Math.random()*0.4,c:'#4a4468',up:10});E.splice(n,1)}}}
-function update(dt){craftTick(dt);windTick(dt);slashTick(dt);timeTick(dt);nightTick(dt);v2Tick(dt);arrowTick(dt);puffTick(dt);if(!TUTO&&!INS&&BOT&&!BOT.awake&&!S.botFell&&S.obj===4&&!CUT&&!uiOpen()){fallT+=dt;if(fallT>1.2){fallT=0;botFall()}}else fallT=0;if(!TUTO&&!S.bowTalk&&S.made&&S.made.arc&&!uiOpen())talkOr(BOWTALK,'bowTalk');if(!TUTO)S.stats.time=(S.stats.time||0)+dt;if(!INS&&!TUTO)botTick(dt);
+function update(dt){craftTick(dt);windTick(dt);slashTick(dt);torchTick(dt);timeTick(dt);nightTick(dt);v2Tick(dt);arrowTick(dt);puffTick(dt);if(!TUTO&&!INS&&BOT&&!BOT.awake&&!S.botFell&&S.obj===4&&!CUT&&!uiOpen()){fallT+=dt;if(fallT>1.2){fallT=0;botFall()}}else fallT=0;if(!TUTO&&!S.bowTalk&&S.made&&S.made.arc&&!uiOpen())talkOr(BOWTALK,'bowTalk');if(!TUTO)S.stats.time=(S.stats.time||0)+dt;if(!INS&&!TUTO)botTick(dt);
  let jx=J.x,jy=J.y;if(keys['arrowleft']||keys['q']||keys['a'])jx=-1;if(keys['arrowright']||keys['d'])jx=1;if(keys['arrowup']||keys['z']||keys['w'])jy=-1;if(keys['arrowdown']||keys['s'])jy=1;
  const m=Math.min(1,Math.hypot(jx,jy));
  if(m>0.12){const nj=Math.hypot(jx,jy),spx=73*(S.tools.bottesD?1.25:S.tools.bottesO?1.2:S.tools.bottesF?1.15:S.tools.bottes?1.1:1)*(sk('e1')?1.08:1)*(P.boat?1.35:1)*m*dt,dX=jx/nj*spx,dY=jy/nj*spx;let wx=(jx/TW+jy/TH)/2,wy=(jy/TH-jx/TW)/2;const l=Math.hypot(wx,wy);wx/=l;wy/=l;P.fx=wx;P.fy=wy;const mx=(dX/TW+dY/TH)/2,my=(dY/TH-dX/TW)/2;
@@ -1548,7 +1554,7 @@ function uiOpen(){return [...document.querySelectorAll('.panel')].some(p=>p.styl
 let CONT={},ACC={},UIR=null,LIVE=null;
 function mkIcon(r){const cv=document.createElement('canvas');cv.width=120;cv.height=120;const g=cv.getContext('2d');g.setTransform(4.6,0,0,4.6,60,60);g.lineJoin='round';ICON[r](g);return cv}
 function grid(cid,arr,cols,cls){CONT[cid]=arr;const gr=document.createElement('div');gr.className='inv '+(cls||'');gr.style.gridTemplateColumns='repeat('+cols+',1fr)';
- arr.forEach((sl,i)=>{const c=document.createElement('div');c.className='slot';c.dataset.c=cid;c.dataset.i=i;if(sl){c.appendChild(mkIcon(sl.r));if(TOOLK.indexOf(sl.r)<0&&CLOTH.indexOf(sl.r)<0){const n=document.createElement('b');n.textContent=sl.n;c.appendChild(n)}else if(sl.dur){const bar=document.createElement('u');const f=sl.dur/(DURMAX[sl.r]||20);bar.innerHTML='<span style="width:'+(f*100)+'%;background:'+(f>0.5?'#8fc05a':f>0.25?'#f0b44c':'#e0554a')+'"></span>';c.appendChild(bar)}if(cols<=6){const nm=document.createElement('i');nm.textContent=RES[sl.r][0];c.appendChild(nm)}}
+ arr.forEach((sl,i)=>{const c=document.createElement('div');c.className='slot';c.dataset.c=cid;c.dataset.i=i;if(sl){c.appendChild(mkIcon(sl.r));if(TOOLK.indexOf(sl.r)<0&&CLOTH.indexOf(sl.r)<0){const n=document.createElement('b');n.textContent=sl.n;c.appendChild(n)}if(sl.dur&&(sl.r=='torche'||TOOLK.indexOf(sl.r)>=0||CLOTH.indexOf(sl.r)>=0)){const bar=document.createElement('u');const f=sl.dur/(sl.r=='torche'?TORCHL:(DURMAX[sl.r]||20));bar.innerHTML='<span style="width:'+(f*100)+'%;background:'+(f>0.5?'#8fc05a':f>0.25?'#f0b44c':'#e0554a')+'"></span>';c.appendChild(bar)}if(cols<=6){const nm=document.createElement('i');nm.textContent=RES[sl.r][0];c.appendChild(nm)}}
   let dg=null;c.onpointerdown=e=>{if(!arr[i])return;dg={x0:e.clientX,y0:e.clientY,mv:false,gh:null};c.setPointerCapture(e.pointerId)};
   c.onpointermove=e=>{if(!dg)return;if(!dg.mv&&Math.hypot(e.clientX-dg.x0,e.clientY-dg.y0)>8){dg.mv=true;const r=c.getBoundingClientRect();dg.w=Math.max(56,r.width);dg.gh=document.createElement('div');dg.gh.className='slot ghost';dg.gh.style.width=dg.w+'px';dg.gh.style.height=dg.w+'px';dg.gh.appendChild(mkIcon(arr[i].r));document.body.appendChild(dg.gh);c.style.opacity=0.35}if(dg.mv){dg.gh.style.left=(e.clientX-dg.w/2)+'px';dg.gh.style.top=(e.clientY-dg.w/2)+'px';document.querySelectorAll('.slot.over').forEach(x=>x.classList.remove('over'));const t=document.elementFromPoint(e.clientX,e.clientY),ts=t&&t.closest('[data-c]');if(ts&&ts!==c)ts.classList.add('over')}};
   c.onpointerup=e=>{if(!dg)return;if(dg.mv){dg.gh.remove();const t=document.elementFromPoint(e.clientX,e.clientY),ts=t&&t.closest('[data-c]');if(ts&&(ts.dataset.c=='trash'||ts.dataset.c=='drop'))zoneDrop(cid,i,ts.dataset.c);else if(ts)moveItem(cid,i,ts.dataset.c,+ts.dataset.i);dg=null;UIR&&UIR()}else{dg=null;tapItem(cid,i)}};
