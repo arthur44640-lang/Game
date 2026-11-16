@@ -596,11 +596,11 @@ function act(){if(CRAFTING||P.wind)return;if(P.boat){if(P.cd>0)return;P.cd=0.4;b
  if(shootArrow())return;
  const wk=handWpn(),armed=!!wk;let best=null,bd=1.9;for(const e of E){if(!SPEC[e.k].mon)continue;const d=Math.hypot(e.x-P.x,e.y-P.y);if(d<bd){bd=d;best=e}}
  if(!best){bd=1.6;for(const e of E){if(SPEC[e.k].mon)continue;const d=Math.hypot(e.x-P.x,e.y-P.y);if(d<bd){bd=d;best=e}}}
- if(!best||!SPEC[best.k].mon){const pp=pickPet(best);if(pp){best=pp;if(animalAct(best))return}}
- if(best){startWind(wk,best);return;const atk=meleeAtk(best,wk);P.act={type:armed?'slash':'punch',t:0.32,dur:0.32};P.swing=0.25;{const d=Math.max(0.01,bd);P.fx=(best.x-P.x)/d;P.fy=(best.y-P.y)/d;P.th=Math.atan2(P.fx-P.fy,(P.fx+P.fy)*0.5)}hurtE(best,atk);return}
+ {let b2=null,d2=1.6;for(const e of E){if(SPEC[e.k].mon)continue;const d=Math.hypot(e.x-P.x,e.y-P.y);if(d<d2){d2=d;b2=e}}const pp=pickPet(b2);if(pp&&animalAct(pp))return}
+ if(false){const atk=meleeAtk(best,wk);P.act={type:armed?'slash':'punch',t:0.32,dur:0.32};P.swing=0.25;{const d=Math.max(0.01,bd);P.fx=(best.x-P.x)/d;P.fy=(best.y-P.y)/d;P.th=Math.atan2(P.fx-P.fy,(P.fx+P.fy)*0.5)}hurtE(best,atk);return}
  const fx=P.x+P.fx*0.6,fy=P.y+P.fy*0.6;let bt=null;bd=1e9;
  for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const i=Math.floor(P.x)+a,j=Math.floor(P.y)+b;if(!inB(i,j)||!OB[i][j])continue;const o=OB[i][j];if(['tree','rock','bush','flower','garden','twig','pebble','fire','bench','coffre','tent','part','lit','metier','enclume','four','chantier','grotte','echelle','ore','tresor','bateau'].indexOf(o.t)<0)continue;const qx=i+0.5+o.ox,qy=j+0.5+o.oy;if(Math.hypot(qx-P.x,qy-P.y)>0.95+o.r)continue;const d=Math.hypot(qx-fx,qy-fy);if(d<bd){bd=d;bt=[i,j]}}
- if(!bt){startWind(wk,null);return}
+ if(!bt){return}
  const [i,j]=bt,o=OB[i][j],z=HM[i][j];o.shake=0.25;{const vx=i+0.5+o.ox-P.x,vy=j+0.5+o.oy-P.y,l=Math.hypot(vx,vy)||1;P.fx=vx/l;P.fy=vy/l;P.th=Math.atan2(P.fx-P.fy,(P.fx+P.fy)*0.5)}{const hv=o.t=='tree'||o.t=='rock'||o.t=='ore';P.act={type:o.t=='tree'?'chop':hv?'mine':'pick',t:hv?0.36:0.42,dur:hv?0.36:0.42}}
  if(o.t=='tree'){const tk=handTool('hache');if(!tk){P.act={type:'punch',t:0.32,dur:0.32};fl(i+.5,j+.5,z+1,invTool('hache')?'Prends ta hache en main':'Il te faut une hache','#8a5a3a');if(!TUTO&&!invTool('hache')&&Math.random()<0.15)fling(i+.5+o.ox,j+.5+o.oy,z,'branche',1)}else{P.act=null;toolWind(tk,i,j,'tree');return}}
  else if(o.t=='rock'){const tk=handTool('pioche');if(!tk){P.act={type:'punch',t:0.32,dur:0.32};fl(i+.5,j+.5,z+.8,invTool('pioche')?'Prends ta pioche en main':'Il te faut une pioche','#8a5a3a');if(!TUTO&&!invTool('pioche')&&Math.random()<0.15)fling(i+.5+o.ox,j+.5+o.oy,z,'caillou',1)}else{P.act=null;toolWind(tk,i,j,'rock');return}}
